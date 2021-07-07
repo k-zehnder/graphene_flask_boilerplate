@@ -86,7 +86,7 @@ schema = graphene.Schema(query=Query, mutation=Mutation)
 
 # Routes
 app.add_url_rule(
-    '/graphql-api',
+    '/graphql',
     view_func=GraphQLView.as_view(
         'graphql',
         schema=schema,
@@ -96,6 +96,6 @@ app.add_url_rule(
 
 @app.route('/')
 def index():
-    return 'Welcome to Book Store Api'
+    return 'Welcome to your Api'
 if __name__ == '__main__':
      app.run()
