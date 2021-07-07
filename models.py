@@ -1,32 +1,49 @@
-# flask_sqlalchemy/models.py
-from sqlalchemy import *
-from sqlalchemy.orm import (scoped_session, sessionmaker, relationship,
-                            backref)
-from sqlalchemy.ext.declarative import declarative_base
+from peewee import *
+import pandas as pd
+import numpy as np
+import phonenumbers
+from phonenumbers import geocoder
+from phonenumbers.timezone import time_zones_for_number
+from faker import Faker
+import datetime
+import pytz
+import os
 
-engine = create_engine('sqlite:///database.sqlite3', convert_unicode=True)
-db_session = scoped_session(sessionmaker(autocommit=False,
-                                         autoflush=False,
-                                         bind=engine))
+# initialize db
+db = SqliteDatabase('respondNoTwilio.db')
 
-Base = declarative_base()
-# We will need this for querying
-Base.query = db_session.query_property()
+# Base model for work with Database through ORM
+class BaseModel(Model):
+    class Meta:
+        database = db  # connection with database
 
+# Modules
+# db = SQLAlchemy(app)
 
-class Department(Base):
-    __tablename__ = 'department'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
+# Models
+class User(db.Model):
+    __tablename__ = 'users'
 
-class Employee(Base):
-    __tablename__ = 'employee'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    hired_on = Column(DateTime, default=func.now())
-    department_id = Column(Integer, ForeignKey('department.id'))
-    department = relationship(
-        Department,
-        backref=backref('employees',
-                        uselist=True,
-                        cascade='delete,all'))
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, index=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    books = db.relationship('Book', backref='author')
+
+    def __init__(self, username, email):
+      self.username = username
+      self.email = email
+
+    def __repr__(self):
+        return '<User %r>' % self.id
+
+class Book(db.Model):
+    __tablename__ = 'books'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(256), index=True, nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    def __repr__(self):
+        return '<Book %r>' % self.title % self.description % self.year % self.author_id
